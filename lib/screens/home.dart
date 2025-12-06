@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'services/api.dart';
+import '../services/api.dart';
+import '../services/location.dart';
 
 class HomeScreen extends StatelessWidget {
   final String username;
@@ -23,12 +24,22 @@ class HomeScreen extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
-                
+                bool allowed = await LocationService.isWithinRange(30);
+                if (!allowed) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("You must be within 30m of the office"),
+                    ),
+                  );
+                  return;
+                }
                 final res = await Api.checkIn(username);
                 if (!context.mounted) return;
                 if (res["ok"] == true) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(const SnackBar(content: Text("Checked In")));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text("Checked In")));
                 }
               },
               child: const Text("Check In"),
@@ -38,11 +49,22 @@ class HomeScreen extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
+                bool allowed = await LocationService.isWithinRange(30);
+                if (!allowed) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("You must be within 30m of the office"),
+                    ),
+                  );
+                  return;
+                }
                 final res = await Api.checkOut(username);
                 if (!context.mounted) return;
-                if (res["ok"] == true) {                             
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(const SnackBar(content: Text("Checked Out")));
+                if (res["ok"] == true) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text("Checked Out")));
                 }
               },
               child: const Text("Check Out"),

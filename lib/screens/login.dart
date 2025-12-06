@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'services/api.dart';
-import 'home.dart';
+import '../services/api.dart';
+import '../screens/home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,25 +17,24 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> performLogin() async {
     final username = userController.text.trim();
     final password = passController.text.trim();
-    
+
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Enter username & password")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Enter username & password")),
+      );
       return;
     }
 
     setState(() => loading = true);
 
-    final res = await Api.login(
-      username: username,
-      password: password,
-    );
+    final res = await Api.login(username: username, password: password);
 
     setState(() => loading = false);
     if (!mounted) return;
     if (res["ok"] != true) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Wrong username/password")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Wrong username/password")));
       return;
     }
 
