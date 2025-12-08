@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart'; //contains debugPrint
+import 'package:flutter/foundation.dart';
 
-// ⚠ YOUR NEW WEB APP URL HERE
-const String baseUrl =
+// ⭐ Your Vercel Proxy URL
+const String proxyBase =
+    "https://gas-proxy-8lasy44pi-gokilavani-devs-projects.vercel.app/api/proxy?url=";
+
+// ⭐ Your Google Apps Script Exec URL
+const String gasUrl =
     "https://script.google.com/macros/s/AKfycbzCS5QaT7RdwowdpccJObq4mOxQNV_-T-bwNH64OP4iG3OwcEkDx5Y0w20WSh1PrqoibQ/exec";
 
 class Api {
@@ -12,12 +16,15 @@ class Api {
     required String username,
     required String password,
   }) async {
-    final uri = Uri.parse(
-      "$baseUrl?action=login&username=$username&password=$password",
-    );
+    final String target =
+        "$gasUrl?action=login&username=$username&password=$password";
+
+    final Uri uri = Uri.parse(proxyBase + Uri.encodeComponent(target));
+
+    debugPrint("🔵 LOGIN URL = $uri");
 
     final res = await http.get(uri);
-    debugPrint("🔵 LOGIN URL = $uri");
+
     debugPrint("🟢 LOGIN RESPONSE = ${res.body}");
 
     try {
@@ -29,7 +36,8 @@ class Api {
 
   // ---------------- CHECK-IN ----------------
   static Future<Map<String, dynamic>> checkIn(String username) async {
-    final uri = Uri.parse("$baseUrl?action=checkin&username=$username");
+    final String target = "$gasUrl?action=checkin&username=$username";
+    final Uri uri = Uri.parse(proxyBase + Uri.encodeComponent(target));
 
     final res = await http.get(uri);
     debugPrint("🟢 CHECK-IN = ${res.body}");
@@ -43,7 +51,8 @@ class Api {
 
   // ---------------- CHECK-OUT ----------------
   static Future<Map<String, dynamic>> checkOut(String username) async {
-    final uri = Uri.parse("$baseUrl?action=checkout&username=$username");
+    final String target = "$gasUrl?action=checkout&username=$username";
+    final Uri uri = Uri.parse(proxyBase + Uri.encodeComponent(target));
 
     final res = await http.get(uri);
     debugPrint("🟢 CHECK-OUT = ${res.body}");
