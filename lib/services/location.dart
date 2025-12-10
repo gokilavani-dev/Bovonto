@@ -1,19 +1,20 @@
 import 'package:geolocator/geolocator.dart';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 
 class LocationService {
-  static const companyLat = 9.848738; // <-- replace with real company latitude
-  static const companyLng =
-      78.086800; // <-- replace with real company longitude
+  static const double companyLat = 9.848738;
+  static const double companyLng = 78.086800;
 
-  // Distance calculator using Haversine formula
+  static double _degToRad(double deg) => deg * (pi / 180);
+
   static double calculateDistance(
     double lat1,
     double lon1,
     double lat2,
     double lon2,
   ) {
-    const R = 6371000; // meters
+    const R = 6371000;
     final dLat = _degToRad(lat2 - lat1);
     final dLon = _degToRad(lon2 - lon1);
 
@@ -25,37 +26,42 @@ class LocationService {
             sin(dLon / 2);
 
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
     return R * c;
   }
 
-  static double _degToRad(double deg) => deg * (pi / 180);
-
-  static Future<bool> isWithinRange(double rangeMeters) async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return false;
-
+  // === FIXED FUNCTION ===
+  static Future<String> validateLocation(double rangeMeters) async {
     LocationPermission permission = await Geolocator.checkPermission();
+
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return false;
+      if (permission == LocationPermission.denied) return "perm_denied";
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return false;
+      return "perm_blocked";
     }
 
-    Position pos = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    Position? pos;
+    try {
+      pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.bestForNavigation,
+      );
+    } catch (e) {
+      return "off"; // REAL location OFF (Oppo fix)
+    }
 
-    double distance = calculateDistance(
+    double dist = calculateDistance(
       pos.latitude,
       pos.longitude,
       companyLat,
       companyLng,
     );
 
-    return distance <= rangeMeters;
+    debugPrint("USER DISTANCE = $dist");
+
+    if (dist > rangeMeters) return "far";
+
+    return "ok";
   }
 }
