@@ -42,7 +42,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (res["ok"] == true) {
       _showMsg("Checked In Successfully!");
     } else {
-      _showMsg("Check-In Failed. Try again.");
+      if (res["error"] == "already_checked_in") {
+        _showMsg("You have already checked in today.");
+      } else {
+        _showMsg("Check-In Failed. Try again.");
+      }
     }
   }
 
@@ -69,7 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (res["ok"] == true) {
       _showMsg("Checked Out Successfully!");
     } else {
-      _showMsg("Check-Out Failed. Try again.");
+      if (res["error"] == "no_checkin_found") {
+        _showMsg("You have not checked in today.");
+      } else if (res["error"] == "already_checked_out") {
+        _showMsg("You have already checked out today.");
+      } else {
+        _showMsg("Check-Out Failed. Try again.");
+      }
     }
   }
 
