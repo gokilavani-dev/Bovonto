@@ -29,27 +29,39 @@ class LocationService {
     return R * c;
   }
 
-  // === FIXED FUNCTION ===
-  static Future<String> validateLocation(double rangeMeters) async {
+  static Future<bool> _ensurePermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return "perm_denied";
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      return "perm_blocked";
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return false;
     }
 
-    Position? pos;
+    return true;
+  }
+
+  // UNIVERSAL LOCATION FETCH (Works on all Geolocator versions)
+  static Future<Position?> _getLocation() async {
+    bool ok = await _ensurePermission();
+    if (!ok) return null;
+
     try {
-      pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.bestForNavigation,
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low, // battery saver & stable
       );
     } catch (e) {
-      return "off"; // REAL location OFF (Oppo fix)
+      debugPrint("LOCATION ERROR: $e");
+      return null;
     }
+  }
+
+  static Future<String> validateLocation(double rangeMeters) async {
+    Position? pos = await _getLocation();
+    if (pos == null) return "location_off";
 
     double dist = calculateDistance(
       pos.latitude,
@@ -61,7 +73,6 @@ class LocationService {
     debugPrint("USER DISTANCE = $dist");
 
     if (dist > rangeMeters) return "far";
-
     return "ok";
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
 import '../services/api.dart';
-import '../services/location.dart';
+import '../services/location.dart'; // Ensure correct file name
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -13,34 +13,39 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // COMMON MESSAGE FUNCTION
   void _showMsg(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // CHECK-IN FUNCTION
+  // ---------------- CHECK-IN ----------------
   Future<void> _doCheckIn() async {
     final result = await LocationService.validateLocation(30);
 
     if (!mounted) return;
 
-    if (result == "off") return _showMsg("Please turn ON location.");
+    if (result == "location_off") {
+      return _showMsg("Please turn ON Location.");
+    }
     if (result == "perm_denied") {
-      return _showMsg("Please allow location permission.");
+      return _showMsg("Please allow Location Permission.");
     }
     if (result == "perm_blocked") {
-      return _showMsg("Location permission is blocked. Enable it in Settings.");
+      return _showMsg("Permission permanently blocked. Enable in Settings.");
     }
     if (result == "far") {
       return _showMsg("You must be within 30 meters of the office.");
     }
 
+    // If OK → save to Sheet
     final res = await Api.checkIn(widget.username);
+
     if (!mounted) return;
 
     if (res["ok"] == true) {
       _showMsg("Checked In Successfully!");
+    } else if (res["error"] == "already_checked_in") {
+      _showMsg("You have already checked in today.");
     } else {
       if (res["error"] == "already_checked_in") {
         _showMsg("You have already checked in today.");
@@ -50,28 +55,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // CHECK-OUT FUNCTION
+  // ---------------- CHECK-OUT ----------------
   Future<void> _doCheckOut() async {
     final result = await LocationService.validateLocation(30);
 
     if (!mounted) return;
 
-    if (result == "off") return _showMsg("Please turn ON location.");
+    if (result == "location_off") {
+      return _showMsg("Please turn ON Location.");
+    }
     if (result == "perm_denied") {
-      return _showMsg("Please allow location permission.");
+      return _showMsg("Please allow Location Permission.");
     }
     if (result == "perm_blocked") {
-      return _showMsg("Location permission is blocked. Enable it in Settings.");
+      return _showMsg("Permission permanently blocked. Enable in Settings.");
     }
     if (result == "far") {
       return _showMsg("You must be within 30 meters of the office.");
     }
 
+    // If OK → save checkout
     final res = await Api.checkOut(widget.username);
+
     if (!mounted) return;
 
     if (res["ok"] == true) {
       _showMsg("Checked Out Successfully!");
+    } else if (res["error"] == "no_checkin_found") {
+      _showMsg("You have not checked in today.");
+    } else if (res["error"] == "already_checked_out") {
+      _showMsg("You have already checked out today.");
     } else {
       if (res["error"] == "no_checkin_found") {
         _showMsg("You have not checked in today.");
@@ -83,13 +96,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // UI
+  // ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      // APPBAR WITH BACK BUTTON → GOES TO LOGIN PAGE
       appBar: AppBar(
         backgroundColor: Colors.purple.shade700,
         title: const Text(
@@ -99,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Back → LoginScreen (Auto login will redirect to HomeScreen instantly)
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -123,7 +134,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 40),
 
-            // CHECK-IN (GREEN)
             ElevatedButton(
               onPressed: _doCheckIn,
               style: ElevatedButton.styleFrom(
@@ -144,7 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            // CHECK-OUT (RED)
             ElevatedButton(
               onPressed: _doCheckOut,
               style: ElevatedButton.styleFrom(
