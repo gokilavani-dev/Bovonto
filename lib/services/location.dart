@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 class LocationService {
-  static const double companyLat = 9.848738;
-  static const double companyLng = 78.086800;
+  static const double companyLat = 9.8846830;
+  static const double companyLng = 78.1432800;
 
   static double _degToRad(double deg) => deg * (pi / 180);
 
